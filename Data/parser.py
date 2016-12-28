@@ -32,6 +32,29 @@ def calculateOHLC(key) :
         OHLCarr.append((data[0],((float(data[1])+float(data[2])+float(data[3])+float(data[4]))/4)))
     OHLC[key] = OHLCarr
 
+def meanCalculater(key,i_d) :
+    i=0
+    total = 0
+    mean = 0
+    print i_d
+    if i_d == "i" :
+        for data in index_returns[keys] :
+            total += data[1]
+            i += 1
+        try :
+            mean = total/i
+        except :
+            raise ZeroDivisionError()
+    elif i_d == "d" :
+        for data in stock_returns[keys] :
+            total += data[1]
+            i += 1
+        try :
+            mean = total/i
+        except :
+            raise ZeroDivisionError()
+    return mean
+
 def calculateReturns(keys) :
     myData = OHLC[keys]
     leng = len(myData)
@@ -42,31 +65,20 @@ def calculateReturns(keys) :
         index_returns[keys] = _returns
     else :
         stock_returns[keys] = _returns
+
 def calculateVars(keys) :
     i=0
     total = 0
     if "Index" in keys :
-        for data in index_returns[keys] :
-            total += data[1]
-            i += 1
-        try :
-            mean = total/i
-        except :
-            raise ZeroDivisionError()
-        total = 0
+        mean = meanCalculater(keys,"i")
+        i = len(index_returns)
         for data in index_returns[keys]:
             total += (data[1] - mean)*(data[1]-mean)
         index_variances[keys] = total/i
         index_risk[keys] = math.sqrt(total/i)
-    else :
-        for data in stock_returns[keys] :
-            total += data[1]
-            i += 1
-        try :
-            mean = total/i
-        except :
-            raise ZeroDivisionError()
-        total = 0
+    elif "Index" not in keys :
+        mean = meanCalculater(keys,"d")
+        i=len(stock_returns)
         for data in stock_returns[keys]:
             total += (data[1] - mean)*(data[1]-mean)
         stock_variances[keys] = total/i
@@ -75,22 +87,10 @@ def calculateVars(keys) :
 def calculateCovs(key1,key2) :
     total=0
     i=0
-    mean_stock = 0
-    mean_index = 0
-    for data in stock_returns[key1] :
-        total += data[1]
-        i += 1
-    mean_stock = total/i
-    total=0
-    i=0
-    for data in index_returns[key2] :
-        total += data[1]
-        i += 1
-    mean_index = total/i
-    total=0
-    i=0
+    mean_stock = meanCalculater(key1,"d")
+    mean_index = meanCalculater(key2,"i")
     if (len(stock_returns[key1])==len(index_returns[key2])) :
-        print True
+        i = len(stock_returns[key1])
     else :
         print False
     #cov[key1+keys.split(' - ')[1]] = _beta
@@ -102,6 +102,8 @@ for keys in investments :
 
 for key1 in stock_returns :
     for key2 in index_returns :
-        calculateCovs(key1,key2)
+        continue
+        #calculateCovs(key1,key2)
 
-print stock_risk
+print stock_variances
+print index_variances
