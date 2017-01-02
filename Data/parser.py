@@ -117,119 +117,76 @@ for key in stock_returns :
     calculateSRs(key)
 for key in index_returns :
     calculateSRi(key)
-print alfas
-print betas
 averageReturns = []
 portRisk = []
-for key in stock_returns :
+days = (len(stock_returns['DE']))
+for i in range(days) :
+    day = stock_returns['DE'][i][0]
     total = 0
-    i = 0
-    if key == 'GOOG' :
-        for data in stock_returns[key] :
-            total += 266*data[1]
-            i += 1
-        averageReturns.append((key,total/i))
-    elif key == 'XOM' :
-        for data in stock_returns[key] :
-            total += 2297*data[1]
-            i += 1
-        averageReturns.append((key,total/i))
-    elif key == 'WMT' :
-        for data in stock_returns[key] :
-            total += 2822*data[1]
-            i += 1
-        averageReturns.append((key,total/i))
-    elif key == 'JNJ' :
-        for data in stock_returns[key] :
-            total += 1786*data[1]
-            i += 1
-        averageReturns.append((key,total/i))
-    elif key == 'BHP' :
-        for data in stock_returns[key] :
-            total += 5235*data[1]
-            i += 1
-        averageReturns.append((key,total/i))
-    else :
-        continue
+    for key in stock_returns :
+        if key == 'DE' :
+            total += 1970*stock_returns[key][i][1]
+        if key == 'GS' :
+            total += 895*stock_returns[key][i][1]
+        if key == 'BHP' :
+            total += 5260*stock_returns[key][i][1]
+        if key == 'JNJ' :
+            total += 1786*stock_returns[key][i][1]
+        if key == 'WMT' :
+            total += 2821*stock_returns[key][i][1]
+    averageReturns.append((day,total/12732))
+sums = 0
+for data in averageReturns :
+    sums += data[1]
+par=sums/days # Portfolio Average Return
+print "Portfolio Average Return : " + str(par)
+total = 0
+for data in averageReturns :
+    total += (data[1] - par) *(data[1] - par)
 
-for key in stock_returns :
-    total = 0
-    i = 0
-    mean = 0
-    if key == 'GOOG' :
-        for data in averageReturns  :
-            if data[0] == 'GOOG' :
-                mean = data[1]
-        for data in stock_returns[key] :
-            total += (266*data[1] - mean)*(266*data[1] - mean)
-            i += 1
-        portRisk.append((key,math.sqrt(total/i)))
-    elif key == 'XOM' :
-        for data in averageReturns  :
-            if data[0] == 'XOM' :
-                mean = data[1]
-        for data in stock_returns[key] :
-            total += (2297*data[1] - mean)*(2297*data[1] - mean)
-            i += 1
-        portRisk.append((key,math.sqrt(total/i)))
-    elif key == 'WMT' :
-        for data in averageReturns  :
-            if data[0] == 'WMT' :
-                mean = data[1]
-        for data in stock_returns[key] :
-            total += (2822*data[1] - mean)*(2822*data[1] - mean)
-            i += 1
-        portRisk.append((key,math.sqrt(total/i)))
-    elif key == 'JNJ' :
-        for data in averageReturns  :
-            if data[0] == 'JNJ' :
-                mean = data[1]
-        for data in stock_returns[key] :
-            total += (1786*data[1] - mean)*(1786*data[1] - mean)
-            i += 1
-        portRisk.append((key,math.sqrt(total/i)))
-    elif key == 'BHP' :
-        for data in averageReturns  :
-            if data[0] == 'BHP' :
-                mean = data[1]
-        for data in stock_returns[key] :
-            total += (5235*data[1] - mean)*(5235*data[1] - mean)
-            i += 1
-        portRisk.append((key,math.sqrt(total/i)))
-    else :
-        continue
+pv = total/days # Portfolio Variance
+
+porrisk = math.sqrt(pv) # risk
+
+print "Portfolio Risk : " + str(porrisk)
 betaPort = {}
 alfaPort = {}
-def calculateBetaforPortfolio(key1,key2,mult) :
-    total=0
-    i=len(stock_returns[key1])
-    for data in averageReturns :
-        if data[0] == key1 :
-            ms = data[1]
-    mi = meanCalculater(key2,0)
-    var = index_variances[key2]
-    for k in range(i) :
-        rs = stock_returns[key1][k][1]*mult
-        ri = index_returns[key2][k][1]
-        total += (rs-ms)*(ri-mi)
-    cov = total/i
-    betaPort[key1+"-"+key2.split(' - ')[1]] = (cov/var)
-    alfaPort[key1+"-"+key2.split(' - ')[1]] = ms - (cov/var)*mi
-for key1 in stock_returns :
-    for key2 in index_returns :
-        if key1 == 'GOOG' :
-            calculateBetaforPortfolio(key1,key2,266)
-        elif key1 == 'XOM' :
-            calculateBetaforPortfolio(key1,key2,2297)
-        elif key1 == 'WMT' :
-            calculateBetaforPortfolio(key1,key2,2822)
-        elif key1 == 'JNJ' :
-            calculateBetaforPortfolio(key1,key2,1786)
-        elif key1 == 'BHP' :
-            calculateBetaforPortfolio(key1,key2,5235)
-        else :
-            continue
 
+for key in index_returns :
+    total=0
+    days=len(averageReturns)
+    ms = par
+    mi = meanCalculater(key,0)
+    for day in range(days) :
+        rs = averageReturns[day][1]
+        ri = index_returns[key][day][1]
+        total += (rs-ms)*(ri-mi)
+    cov = total/days
+    var = index_variances[key]
+    betaPort[key.split(' - ')[1]] = (cov/var)
+    alfaPort[key.split(' - ')[1]] = ms - (cov/var)*mi
+
+marginalContribute = [] #marginal contribution of each constituent to the portfolio risk
+
+for key in stock_returns :
+    if key != 'DE' and key != 'GS' and key != 'BHP' and  key != 'JNJ' and key != 'WMT' :
+        continue
+    ms = par
+    mi = meanCalculater(key,1)
+    total=0
+    for day in range(days) :
+        rs = averageReturns[day][1]
+        ri = stock_returns[key][day][1]
+        total += (rs-ms)*(ri-mi)
+    cov = total/days
+    marginalContribute.append((key,(cov/porrisk)))
+
+print " Beta of the Portfolio : "
+print betaPort
+print " Alpha of the Portfolio : "
+print alfaPort
+print "Marginal Contribution : "
+print marginalContribute
 results = '../results.csv'
 workbook = xlsxwriter.Workbook('../results.xlsx')
 worksheet = workbook.add_worksheet()
